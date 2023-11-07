@@ -44,3 +44,66 @@ if __name__=="__main__":
         heapq.heappush(nodes, newnode)
 
     printnodes(nodes[0]) # Passing root of Huffman Tree
+
+
+import heapq
+from collections import Counter, namedtuple
+
+class Node(namedtuple("Node", ["left", "right"])):
+    def walk(self, code, acc):
+        self.left.walk(code, acc + "0")
+        self.right.walk(code, acc + "1")
+
+class Leaf(namedtuple("Leaf", ["char"])):
+    def walk(self, code, acc):
+        code[self.char] = acc or "0"
+
+def huffman_encode(s):
+    h = []
+    for ch, freq in Counter(s).items():
+        h.append((freq, len(h), Leaf(ch)))
+    heapq.heapify(h)
+
+    count = len(h)
+    while len(h) > 1:
+        freq1, _count1, left = heapq.heappop(h)
+        freq2, _count2, right = heapq.heappop(h)
+        heapq.heappush(h, (freq1 + freq2, count, Node(left, right)))
+        count += 1
+
+    code = {}
+    if h:
+        [(_freq, _count, root)] = h
+        root.walk(code, "")
+    return code
+
+def huffman_encoding(s):
+    if not s:
+        return None, None
+
+    code = huffman_encode(s)
+    encoded = "".join(code[ch] for ch in s)
+
+    return encoded, code
+
+def huffman_decoding(encoded, code):
+    if not encoded:
+        return None
+
+    decoded = []
+    i = 0
+    while i < len(encoded):
+        for ch, acc in code.items():
+            if encoded[i:i + len(acc)] == acc:
+                decoded.append(ch)
+                i += len(acc)
+                break
+
+    return "".join(decoded)
+
+# User input
+user_input = input("Enter a string to encode: ")
+encoded, code = huffman_encoding(user_input)
+print("Encoded:", encoded)
+decoded = huffman_decoding(encoded, code)
+print("Decoded:", decoded)
